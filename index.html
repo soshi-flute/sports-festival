@@ -143,23 +143,33 @@
   </div>
 
   <script>
+    // デフォルトカラー（HEX表記）
+    const defaultColors = ['#FF5C5C', '#878EF8', '#FFFB94', '#87F278'];
+
     // チーム名と色の管理
     let teams = [];
 
     // 初期表示で4行追加
     window.onload = function() {
-      for (let i = 0; i < 4; i++) addTeamRow();
+      for (let i = 0; i < 4; i++) addTeamRow('', defaultColors[i]);
     };
 
     // チーム行を追加
-    function addTeamRow(name = '', color = getRandomColor()) {
+    function addTeamRow(name = '', color = null) {
       const teamList = document.getElementById('team-list');
       const row = document.createElement('div');
       row.className = 'team-row';
 
+      // デフォルト色
+      let rowColor = color;
+      if (!rowColor) {
+        // 5つ目以降はパステル系ランダム色
+        rowColor = getRandomColor();
+      }
+
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
-      colorInput.value = color;
+      colorInput.value = rowColor;
 
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
@@ -230,9 +240,6 @@
     function backToInput() {
       document.getElementById('result-area').style.display = 'none';
       document.getElementById('input-area').style.display = 'flex';
-      // チーム名・色はリセットしない（必要なら下の2行のコメントを外す）
-      // document.getElementById('team-list').innerHTML = '';
-      // for (let i = 0; i < 4; i++) addTeamRow();
     }
   </script>
 </body>
