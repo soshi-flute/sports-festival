@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>組み合わせぎめ</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+    }
+    body {
+      font-family: 'Arial Black', 'Arial', sans-serif;
+      width: 100vw;
+      height: 100vh;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    #input-area, #result-area {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 {
+      font-size: 3vw;
+      margin-bottom: 2vw;
+    }
+    .team-list {
+      margin-bottom: 2vw;
+      width: 60vw;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      gap: 1vw;
+    }
+    .team-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5vw;
+    }
+    .team-row input[type="text"] {
+      font-size: 2vw;
+      width: 30vw;
+      padding: 0.5vw;
+      margin-right: 2vw;
+    }
+    .team-row input[type="color"] {
+      width: 3vw;
+      height: 3vw;
+      margin-right: 1vw;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+    .team-row button {
+      font-size: 1.5vw;
+      padding: 0.3vw 1vw;
+      margin-left: 1vw;
+      cursor: pointer;
+    }
+    #add-team-btn {
+      font-size: 2vw;
+      padding: 0.5vw 2vw;
+      margin-bottom: 2vw;
+      cursor: pointer;
+    }
+    button {
+      font-size: 2vw;
+      padding: 1vw 4vw;
+      margin: 1vw;
+      cursor: pointer;
+    }
+    .groups {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 3vw;
+      width: 100vw;
+      margin-top: 2vw;
+    }
+    .group {
+      border-radius: 1vw;
+      box-shadow: 0 0 2vw #ccc;
+      padding: 3vw 5vw;
+      font-size: 6vw;
+      min-width: 22vw;
+      margin-bottom: 2vw;
+      text-align: center;
+      line-height: 1.3;
+      color: #222;
+      background: #fff;
+      transition: background 0.3s;
+    }
+    .alone {
+      background: #ffe0e0 !important;
+      color: #c00;
+    }
+    .teamname-colored {
+      display: inline-block;
+      padding: 0.2em 0.8em;
+      border-radius: 0.5em;
+      margin: 0.2em 0;
+      font-weight: bold;
+    }
+    #back-btn {
+      position: absolute;
+      top: 2vw;
+      right: 4vw;
+      font-size: 2vw;
+      padding: 1vw 3vw;
+      background: #aaf;
+      border: none;
+      border-radius: 1vw;
+      cursor: pointer;
+      z-index: 10;
+    }
+    @media (max-width: 800px) {
+      h1 { font-size: 6vw; }
+      .team-row input[type="text"] { font-size: 4vw; width: 40vw; }
+      .team-row input[type="color"] { width: 6vw; height: 6vw; }
+      .team-row button { font-size: 3vw; }
+      #add-team-btn { font-size: 4vw; }
+      button, #back-btn { font-size: 4vw; padding: 2vw 6vw; }
+      .group { font-size: 12vw; padding: 6vw 4vw; min-width: 60vw; }
+    }
+  </style>
+</head>
+<body>
+  <div id="input-area">
+    <h1>チームごとに色をつけてランダム2人組分け</h1>
+    <div class="team-list" id="team-list"></div>
+    <button id="add-team-btn" onclick="addTeamRow()">＋ チームを追加</button>
+    <button onclick="splitTeams()">ランダムに分ける！</button>
+  </div>
+
+  <div id="result-area" style="display:none; flex-direction:column;">
+    <button id="back-btn" onclick="backToInput()">入力画面に戻る</button>
+    <div class="groups" id="groups"></div>
+  </div>
+
+  <script>
+    // チーム名と色の管理
+    let teams = [];
+
+    // 初期表示で4行追加
+    window.onload = function() {
+      for (let i = 0; i < 4; i++) addTeamRow();
+    };
+
+    // チーム行を追加
+    function addTeamRow(name = '', color = getRandomColor()) {
+      const teamList = document.getElementById('team-list');
+      const row = document.createElement('div');
+      row.className = 'team-row';
+
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = color;
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.placeholder = 'チーム名';
+      nameInput.value = name;
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.textContent = '削除';
+      delBtn.onclick = function() {
+        teamList.removeChild(row);
+      };
+
+      row.appendChild(colorInput);
+      row.appendChild(nameInput);
+      row.appendChild(delBtn);
+
+      teamList.appendChild(row);
+    }
+
+    // ランダムなパステルカラー
+    function getRandomColor() {
+      const hue = Math.floor(Math.random() * 360);
+      return `hsl(${hue}, 80%, 85%)`;
+    }
+
+    // チーム分け実行
+    function splitTeams() {
+      // 入力取得
+      const rows = document.querySelectorAll('.team-row');
+      teams = [];
+      rows.forEach(row => {
+        const color = row.querySelector('input[type="color"]').value;
+        const name = row.querySelector('input[type="text"]').value.trim();
+        if (name) teams.push({name, color});
+      });
+      if (teams.length < 2) {
+        alert('2つ以上のチーム名を入力してください。');
+        return;
+      }
+      // シャッフル
+      for (let i = teams.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [teams[i], teams[j]] = [teams[j], teams[i]];
+      }
+      // 2つずつに分けて表示
+      let html = '';
+      let groupNum = 1;
+      for (let i = 0; i < teams.length; i += 2) {
+        if (i + 1 < teams.length) {
+          html += `<div class="group"><b>グループ${groupNum}</b><br><br>
+            <span class="teamname-colored" style="background:${teams[i].color};">${teams[i].name}</span><br>
+            <span class="teamname-colored" style="background:${teams[i+1].color};">${teams[i+1].name}</span>
+          </div>`;
+        } else {
+          html += `<div class="group alone"><b>ひとりグループ</b><br><br>
+            <span class="teamname-colored" style="background:${teams[i].color};">${teams[i].name}</span>
+          </div>`;
+        }
+        groupNum++;
+      }
+      document.getElementById('groups').innerHTML = html;
+      document.getElementById('input-area').style.display = 'none';
+      document.getElementById('result-area').style.display = 'flex';
+    }
+
+    // 入力画面に戻る
+    function backToInput() {
+      document.getElementById('result-area').style.display = 'none';
+      document.getElementById('input-area').style.display = 'flex';
+      // チーム名・色はリセットしない（必要なら下の2行のコメントを外す）
+      // document.getElementById('team-list').innerHTML = '';
+      // for (let i = 0; i < 4; i++) addTeamRow();
+    }
+  </script>
+</body>
+</html>
